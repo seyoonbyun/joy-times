@@ -1,0 +1,46 @@
+.head-line{
+    margin-top: 1em;
+    display: flex;
+    justify-content:center;
+}
+.head-line svg{ 
+    width: 430px;
+    margin: 0px 20px;
+}
+.menus{
+    display: flex;
+    justify-content: center;
+    padding: 5px 0 4px;
+    border-top: 1px solid rgb(235,235,235);
+    border-bottom: 4px double #000;
+    flex-wrap: wrap;
+}
+
+.menus button{
+    border:none;
+    background:none;
+    margin: 5px;
+}
+
+.menus button:hover{
+    background-color: beige;
+    border-radius:3px;
+}
+
+.news-img-size{
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.news{
+    border-bottom: 2px solid black;
+    display: flex;
+    align-items: stretch;
+}
+
+.news .col-lg-4,
+.news .col-lg-8{
+    display: flex;
+    flex-direction: column;
+}
