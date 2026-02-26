@@ -40,30 +40,12 @@ if(menuBtn && sideMenu && menuOverlay){
     });
 }
 
-const categoryMap = {
-    sport: 'sports',
-    sports: 'sports',
-    tech: 'technology',
-    technology: 'technology',
-    business: 'business',
-    entertainment: 'entertainment',
-    science: 'science'
-};
-
-const normalizeKeyword = (keyword)=> keyword.toLowerCase().trim();
-
 const getLatestNews = async(menuKeyword)=>{
     const url = new URL(BASE_NEWS_URL);
 
     if(menuKeyword){
-        const normalizedKeyword = normalizeKeyword(menuKeyword);
-        const mappedCategory = categoryMap[normalizedKeyword];
-
-        if(mappedCategory){
-            url.searchParams.set('category', mappedCategory);
-        }else{
-            url.searchParams.set('q', menuKeyword);
-        }
+        const category = menuKeyword.toLowerCase().trim();
+        url.searchParams.set('category', category);
     }
 
     const response = await fetch(url);
@@ -74,18 +56,31 @@ const getLatestNews = async(menuKeyword)=>{
     render();
 };
 
+const getNewsByKeyword = async () => {
+    const keyword = document.getElementById("search-input").value;
+    console.log("keyword", keyword);
+    const url = new URL(BASE_NEWS_URL);
+    url.searchParams.set('q', keyword);
+    
+    const response = await fetch(url);
+    const data = await response.json();
+    console.log("keyword data", data);
+    newsList = data.articles;
+    render();
+};
+
 const setActiveMenu = (keyword)=>{
-    const normalizedKeyword = normalizeKeyword(keyword);
+    const normalizedKeyword = keyword.toLowerCase().trim();
     const topMenuButtons = document.querySelectorAll('.menus button');
     const sideMenuLinks = document.querySelectorAll('.side-menu-nav a');
 
     topMenuButtons.forEach((button)=>{
-        const isActive = normalizeKeyword(button.textContent) === normalizedKeyword;
+        const isActive = button.textContent.toLowerCase().trim() === normalizedKeyword;
         button.classList.toggle('active', isActive);
     });
 
     sideMenuLinks.forEach((link)=>{
-        const isActive = normalizeKeyword(link.textContent) === normalizedKeyword;
+        const isActive = link.textContent.toLowerCase().trim() === normalizedKeyword;
         link.classList.toggle('active', isActive);
     });
 };
@@ -118,8 +113,8 @@ const render=()=>{
     const newsHTML = newsList.map((news)=>`<div class="row news">
                 <div class="col-lg-4">
                     <img class="news-img-size"
-                        src="${news.urlToImage || 'https://via.placeholder.com/400x300?text=No+Image'}"
-                        onerror="this.src='https://via.placeholder.com/400x300?text=Image+Not+Available'"
+                        src="${news.urlToImage || 'https://placehold.co/400x300?text=No+Image'}"
+                        onerror="this.src='https://placehold.co/400x300?text=Image+Not+Available'"
                         alt="${news.title}">
                 </div>
                 <div class="col-lg-8">
@@ -139,6 +134,21 @@ const render=()=>{
     document.getElementById('news-board').innerHTML = newsHTML;
 };
 
+
+const searchBtn = document.getElementById('search-btn');
+const searchInput = document.getElementById('search-input');
+
+if(searchBtn){
+    searchBtn.addEventListener('click', getNewsByKeyword);
+}
+
+if(searchInput){
+    searchInput.addEventListener('keypress', (e) => {
+        if(e.key === 'Enter'){
+            getNewsByKeyword();
+        }
+    });
+}
 
 connectMenuEvents();
 getLatestNews(); 
