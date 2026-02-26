@@ -2,10 +2,21 @@
     margin-top: 1em;
     display: flex;
     justify-content:center;
+    padding-left: 50px;
 }
 .head-line svg{ 
     width: 430px;
     margin: 0px 20px;
+}
+
+@media (max-width: 576px){
+    .head-line{
+        padding-left: 60px;
+    }
+    .head-line svg{
+        width: 280px;
+        margin: 0 10px;
+    }
 }
 .menus{
     display: flex;
