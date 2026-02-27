@@ -1,156 +1,126 @@
-let newsList = [];
+const CATEGORIES = ['Business', 'Entertainment', 'General', 'Health', 'Science', 'Sports', 'Technology'];
 const BASE_NEWS_URL = 'https://noona-times-be-5ca9402f90d9.herokuapp.com/top-headlines';
+const FALLBACK_IMG = 'https://placehold.co/400x300?text=No+Image';
+const ERROR_IMG = 'https://placehold.co/400x300?text=Image+Not+Available';
 
-const menuBtn = document.getElementById('menu-btn');
-const sideMenu = document.getElementById('side-menu');
-const menuOverlay = document.getElementById('menu-overlay');
+let newsList = [];
 
-const openMenu = ()=>{
-    sideMenu.classList.add('open');
-    menuOverlay.classList.add('show');
-    menuBtn.classList.add('open');
-    menuBtn.setAttribute('aria-expanded', 'true');
-    sideMenu.setAttribute('aria-hidden', 'false');
+// ── DOM 참조 ──
+const $ = (sel) => document.querySelector(sel);
+const $$ = (sel) => document.querySelectorAll(sel);
+
+const menuBtn = $('#menu-btn');
+const sideMenu = $('#side-menu');
+const menuOverlay = $('#menu-overlay');
+const searchInput = $('#search-input');
+const searchBtn = $('#search-btn');
+
+// ── 사이드 메뉴 토글 ──
+const toggleMenu = (open) => {
+    const method = open ? 'add' : 'remove';
+    sideMenu.classList[method]('open');
+    menuOverlay.classList[method]('show');
+    menuBtn.classList[method]('open');
+    menuBtn.setAttribute('aria-expanded', String(open));
+    sideMenu.setAttribute('aria-hidden', String(!open));
 };
 
-const closeMenu = ()=>{
-    sideMenu.classList.remove('open');
-    menuOverlay.classList.remove('show');
-    menuBtn.classList.remove('open');
-    menuBtn.setAttribute('aria-expanded', 'false');
-    sideMenu.setAttribute('aria-hidden', 'true');
-};
-
-if(menuBtn && sideMenu && menuOverlay){
-    menuBtn.addEventListener('click', ()=>{
-        const isOpen = sideMenu.classList.contains('open');
-        if(isOpen){
-            closeMenu();
-            return;
-        }
-        openMenu();
-    });
-
-    menuOverlay.addEventListener('click', closeMenu);
-
-    document.addEventListener('keydown', (event)=>{
-        if(event.key === 'Escape'){
-            closeMenu();
-        }
+if (menuBtn && sideMenu && menuOverlay) {
+    menuBtn.addEventListener('click', () =>
+        toggleMenu(!sideMenu.classList.contains('open'))
+    );
+    menuOverlay.addEventListener('click', () => toggleMenu(false));
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') toggleMenu(false);
     });
 }
 
-const getLatestNews = async(menuKeyword)=>{
+// ── 뉴스 Fetch (공통) ──
+const fetchNews = async (params = {}) => {
     const url = new URL(BASE_NEWS_URL);
-
-    if(menuKeyword){
-        const category = menuKeyword.toLowerCase().trim();
-        url.searchParams.set('category', category);
-    }
+    Object.entries(params).forEach(([k, v]) => {
+        if (v) url.searchParams.set(k, v);
+    });
 
     const response = await fetch(url);
     const data = await response.json();
     newsList = data.articles;
-    console.log("data", newsList);
-    console.log("첫번째 뉴스 이미지 URL:", newsList[0]?.urlToImage);
     render();
 };
 
-const getNewsByKeyword = async () => {
-    const keyword = document.getElementById("search-input").value;
-    console.log("keyword", keyword);
-    const url = new URL(BASE_NEWS_URL);
-    url.searchParams.set('q', keyword);
-    
-    const response = await fetch(url);
-    const data = await response.json();
-    console.log("keyword data", data);
-    newsList = data.articles;
-    render();
-};
+const getLatestNews = (category) =>
+    fetchNews(category ? { category: category.toLowerCase().trim() } : {});
 
-const setActiveMenu = (keyword)=>{
-    const normalizedKeyword = keyword.toLowerCase().trim();
-    const topMenuButtons = document.querySelectorAll('.menus button');
-    const sideMenuLinks = document.querySelectorAll('.side-menu-nav a');
+const getNewsByKeyword = () =>
+    fetchNews({ q: searchInput?.value || '' });
 
-    topMenuButtons.forEach((button)=>{
-        const isActive = button.textContent.toLowerCase().trim() === normalizedKeyword;
-        button.classList.toggle('active', isActive);
-    });
+// ── HTML 이스케이프 ──
+const ESC_MAP = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+const escapeHtml = (value = '') =>
+    String(value).replace(/[&<>"']/g, (ch) => ESC_MAP[ch]);
 
-    sideMenuLinks.forEach((link)=>{
-        const isActive = link.textContent.toLowerCase().trim() === normalizedKeyword;
-        link.classList.toggle('active', isActive);
-    });
-};
-
-const connectMenuEvents = ()=>{
-    const topMenuButtons = document.querySelectorAll('.menus button');
-    const sideMenuLinks = document.querySelectorAll('.side-menu-nav a');
-
-    topMenuButtons.forEach((button)=>{
-        button.addEventListener('click', ()=>{
-            const keyword = button.textContent.trim();
-            setActiveMenu(keyword);
-            getLatestNews(keyword);
-        });
-    });
-
-    sideMenuLinks.forEach((link)=>{
-        link.addEventListener('click', (event)=>{
-            event.preventDefault();
-            const keyword = link.textContent.trim();
-            setActiveMenu(keyword);
-            getLatestNews(keyword);
-            closeMenu();
-        });
-    });
-};
-
-const escapeHtml = (value = '')=>{
-    return String(value)
-        .replaceAll('&', '&amp;')
-        .replaceAll('<', '&lt;')
-        .replaceAll('>', '&gt;')
-        .replaceAll('"', '&quot;')
-        .replaceAll("'", '&#39;');
-};
-
-
-const render=()=>{
-    const newsHTML = newsList.map((news)=>`<article class="news-card">
+// ── 렌더링 ──
+const render = () => {
+    document.getElementById('news-board').innerHTML = newsList
+        .map((news) => `
+            <article class="news-card">
                 <div class="news-card-img">
-                    <img src="${news.urlToImage || 'https://placehold.co/400x300?text=No+Image'}"
-                        onerror="this.src='https://placehold.co/400x300?text=Image+Not+Available'"
-                        alt="${escapeHtml(news.title || 'News image')}">
+                    <img src="${news.urlToImage || FALLBACK_IMG}"
+                         onerror="this.src='${ERROR_IMG}'"
+                         alt="${escapeHtml(news.title || 'News image')}">
                 </div>
                 <div class="news-card-content">
                     <h2>${escapeHtml(news.title || '')}</h2>
                     <p>${escapeHtml(news.description || news.content || '')}</p>
                     <div class="news-meta">${escapeHtml(news.source?.name || '')} ${escapeHtml(news.publishedAt || '')}</div>
                 </div>
-            </article>`
-    ).join('');
-    
-    document.getElementById('news-board').innerHTML = newsHTML;
+            </article>`)
+        .join('');
 };
 
-
-const searchBtn = document.getElementById('search-btn');
-const searchInput = document.getElementById('search-input');
-
-if(searchBtn){
-    searchBtn.addEventListener('click', getNewsByKeyword);
-}
-
-if(searchInput){
-    searchInput.addEventListener('keypress', (e) => {
-        if(e.key === 'Enter'){
-            getNewsByKeyword();
-        }
+// ── 메뉴 Active 상태 ──
+const setActiveMenu = (keyword) => {
+    const norm = keyword.toLowerCase().trim();
+    $$('.menus button, .side-menu-nav a').forEach((el) => {
+        el.classList.toggle('active', el.textContent.toLowerCase().trim() === norm);
     });
-}
+};
 
-connectMenuEvents();
-getLatestNews(); 
+// ── 메뉴 동적 생성 & 이벤트 바인딩 ──
+const buildMenus = () => {
+    const topMenu = $('.menus');
+    const sideNav = $('.side-menu-nav');
+
+    if (topMenu) topMenu.innerHTML = CATEGORIES
+        .map((c) => `<button>${c}</button>`).join('');
+
+    if (sideNav) sideNav.innerHTML = CATEGORIES
+        .map((c) => `<a href="#">${c}</a>`).join('');
+
+    const handleCategory = (keyword, closeSide = false) => {
+        setActiveMenu(keyword);
+        getLatestNews(keyword);
+        if (closeSide) toggleMenu(false);
+    };
+
+    $$('.menus button').forEach((btn) =>
+        btn.addEventListener('click', () => handleCategory(btn.textContent.trim()))
+    );
+
+    $$('.side-menu-nav a').forEach((link) =>
+        link.addEventListener('click', (e) => {
+            e.preventDefault();
+            handleCategory(link.textContent.trim(), true);
+        })
+    );
+};
+
+// ── 검색 이벤트 ──
+searchBtn?.addEventListener('click', getNewsByKeyword);
+searchInput?.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') getNewsByKeyword();
+});
+
+// ── 초기화 ──
+buildMenus();
+getLatestNews();
