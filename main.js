@@ -42,22 +42,48 @@ const fetchNews = async (params = {}) => {
         if (v) url.searchParams.set(k, v);
     });
 
-    const response = await fetch(url);
-    const data = await response.json();
-    newsList = data.articles;
-    render();
+    try {
+        const response = await fetch(url);
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.message || `요청에 실패했습니다 (${response.status})`);
+        }
+
+        newsList = data.articles;
+
+        if (!newsList || newsList.length === 0) {
+            throw new Error('검색된 결과가 없습니다. 다른 키워드로 검색해 보세요.');
+        }
+
+        render();
+    } catch (err) {
+        renderError(err.message);
+    }
 };
 
 const getLatestNews = (category) =>
     fetchNews(category ? { category: category.toLowerCase().trim() } : {});
 
-const getNewsByKeyword = () =>
-    fetchNews({ q: searchInput?.value || '' });
+const getNewsByKeyword = () => {
+    const keyword = searchInput?.value?.trim();
+    if (!keyword) {
+        renderError('검색어를 입력해 주세요.');
+        return;
+    }
+    fetchNews({ q: keyword });
+};
 
 // ── HTML 이스케이프 ──
 const ESC_MAP = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
 const escapeHtml = (value = '') =>
     String(value).replace(/[&<>"']/g, (ch) => ESC_MAP[ch]);
+
+// ── 에러 렌더링 ──
+const renderError = (message) => {
+    document.getElementById('news-board').innerHTML =
+        `<p class="error-message">${escapeHtml(message)}</p>`;
+};
 
 // ── 렌더링 ──
 const render = () => {
