@@ -108,27 +108,29 @@ const connectMenuEvents = ()=>{
     });
 };
 
+const escapeHtml = (value = '')=>{
+    return String(value)
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#39;');
+};
+
 
 const render=()=>{
-    const newsHTML = newsList.map((news)=>`<div class="row news">
-                <div class="col-lg-4">
-                    <img class="news-img-size"
-                        src="${news.urlToImage || 'https://placehold.co/400x300?text=No+Image'}"
+    const newsHTML = newsList.map((news)=>`<article class="news-card">
+                <div class="news-card-img">
+                    <img src="${news.urlToImage || 'https://placehold.co/400x300?text=No+Image'}"
                         onerror="this.src='https://placehold.co/400x300?text=Image+Not+Available'"
-                        alt="${news.title}">
+                        alt="${escapeHtml(news.title || 'News image')}">
                 </div>
-                <div class="col-lg-8">
-                    <h2>${news.title}</h2>
-                    <div class="news-list">
-                        <div class="news-item">
-                            <p>${news.description || news.content || ''}</p>
-                            <div>
-                                ${news.source.name} ${news.publishedAt}
-                            </div>
-                        </div>
-                    </div>
+                <div class="news-card-content">
+                    <h2>${escapeHtml(news.title || '')}</h2>
+                    <p>${escapeHtml(news.description || news.content || '')}</p>
+                    <div class="news-meta">${escapeHtml(news.source?.name || '')} ${escapeHtml(news.publishedAt || '')}</div>
                 </div>
-            </div>`
+            </article>`
     ).join('');
     
     document.getElementById('news-board').innerHTML = newsHTML;
