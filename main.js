@@ -9,6 +9,35 @@ let totalResults = 0;
 let page = 1;
 const groupSize = 10;
 const pageGroup = 5;
+let isScrapView = false;
+
+// ── 스크랩 (localStorage) ──
+const getScrapList = () => JSON.parse(localStorage.getItem('scrapList') || '[]');
+const saveScrapList = (list) => localStorage.setItem('scrapList', JSON.stringify(list));
+
+const isScraped = (url) => getScrapList().some((a) => a.url === url);
+
+const toggleScrap = (newsItem) => {
+    let list = getScrapList();
+    const idx = list.findIndex((a) => a.url === newsItem.url);
+    if (idx > -1) {
+        list.splice(idx, 1);
+    } else {
+        list.push(newsItem);
+    }
+    saveScrapList(list);
+    updateScrapCount();
+    if (isScrapView) {
+        renderScrap();
+    } else {
+        render();
+    }
+};
+
+const updateScrapCount = () => {
+    const countEl = $('.scrap-count');
+    if (countEl) countEl.textContent = getScrapList().length;
+};
 
 // ── DOM 참조 ──
 const $ = (sel) => document.querySelector(sel);
@@ -58,6 +87,13 @@ const fetchNews = async (params = {}) => {
         }
 
         newsList = data.articles;
+        // 중복 기사 제거 (url 기준)
+        const seen = new Set();
+        newsList = newsList.filter((article) => {
+            if (!article.url || seen.has(article.url)) return false;
+            seen.add(article.url);
+            return true;
+        });
         totalResults = data.totalResults || 0;
         totalPages = Math.ceil(totalResults / groupSize);
         if (totalPages < 1) totalPages = 1;
@@ -104,22 +140,83 @@ const renderError = (message) => {
 };
 
 // ── 렌더링 ──
+const renderCard = (news, index) => {
+    const scraped = isScraped(news.url);
+    return `
+        <article class="news-card">
+            <div class="news-card-img" onclick="openArticle(${index})">
+                <img src="${news.urlToImage || FALLBACK_IMG}"
+                     onerror="this.src='${ERROR_IMG}'"
+                     alt="${escapeHtml(news.title || 'News image')}">
+            </div>
+            <div class="news-card-content" onclick="openArticle(${index})">
+                <h2>${escapeHtml(news.title || '')}</h2>
+                <p>${escapeHtml(news.description || news.content || '')}</p>
+                <div class="news-meta">${escapeHtml(news.source?.name || '')} ${escapeHtml(news.publishedAt || '')}</div>
+            </div>
+            <button class="scrap-btn${scraped ? ' scraped' : ''}" onclick="event.stopPropagation(); handleScrap(${index})" aria-label="스크랩" title="${scraped ? '스크랩 해제' : '스크랩'}">
+                ${scraped ? '&#10084;' : '&#9825;'}
+            </button>
+        </article>`;
+};
+
 const render = () => {
+    isScrapView = false;
     document.getElementById('news-board').innerHTML = newsList
-        .map((news) => `
-            <article class="news-card">
-                <div class="news-card-img">
-                    <img src="${news.urlToImage || FALLBACK_IMG}"
-                         onerror="this.src='${ERROR_IMG}'"
-                         alt="${escapeHtml(news.title || 'News image')}">
-                </div>
-                <div class="news-card-content">
-                    <h2>${escapeHtml(news.title || '')}</h2>
-                    <p>${escapeHtml(news.description || news.content || '')}</p>
-                    <div class="news-meta">${escapeHtml(news.source?.name || '')} ${escapeHtml(news.publishedAt || '')}</div>
-                </div>
-            </article>`)
+        .map((news, i) => renderCard(news, i))
         .join('');
+};
+
+// ── 기사 원문 열기 ──
+const openArticle = (index) => {
+    const list = isScrapView ? getScrapList() : newsList;
+    const news = list[index];
+    if (news?.url) window.open(news.url, '_blank');
+};
+
+// ── 스크랩 토글 핸들러 ──
+const handleScrap = (index) => {
+    const list = isScrapView ? getScrapList() : newsList;
+    const news = list[index];
+    if (news) toggleScrap(news);
+};
+
+// ── 스크랩 모아보기 ──
+const renderScrap = () => {
+    isScrapView = true;
+    const scrapList = getScrapList();
+    const board = document.getElementById('news-board');
+    const paginationUl = $('.pagination');
+
+    if (scrapList.length === 0) {
+        board.innerHTML = '<p class="no-results">스크랩한 기사가 없습니다.</p>';
+        if (paginationUl) paginationUl.innerHTML = '';
+        return;
+    }
+
+    board.innerHTML = scrapList
+        .map((news, i) => {
+            const scraped = isScraped(news.url);
+            return `
+                <article class="news-card">
+                    <div class="news-card-img" onclick="openArticle(${i})">
+                        <img src="${news.urlToImage || FALLBACK_IMG}"
+                             onerror="this.src='${ERROR_IMG}'"
+                             alt="${escapeHtml(news.title || 'News image')}">
+                    </div>
+                    <div class="news-card-content" onclick="openArticle(${i})">
+                        <h2>${escapeHtml(news.title || '')}</h2>
+                        <p>${escapeHtml(news.description || news.content || '')}</p>
+                        <div class="news-meta">${escapeHtml(news.source?.name || '')} ${escapeHtml(news.publishedAt || '')}</div>
+                    </div>
+                    <button class="scrap-btn${scraped ? ' scraped' : ''}" onclick="event.stopPropagation(); handleScrap(${i})" aria-label="스크랩 해제" title="스크랩 해제">
+                        ${scraped ? '&#10084;' : '&#9825;'}
+                    </button>
+                </article>`;
+        }).join('');
+
+    if (paginationUl) paginationUl.innerHTML = '';
+    setActiveMenu('my scrap');
 };
 
 // ── 페이지네이션 렌더링 ──
@@ -204,7 +301,8 @@ const buildMenus = () => {
         .map((c) => `<button>${c}</button>`).join('');
 
     if (sideNav) sideNav.innerHTML = CATEGORIES
-        .map((c) => `<a href="#">${c}</a>`).join('');
+        .map((c) => `<a href="#">${c}</a>`).join('') +
+        `<hr class="side-menu-divider"><a href="#" class="scrap-menu-link">&#10084; My Scrap (<span class="scrap-count">${getScrapList().length}</span>)</a>`;
 
     const handleCategory = (keyword, closeSide = false) => {
         setActiveMenu(keyword);
@@ -219,7 +317,12 @@ const buildMenus = () => {
     $$('.side-menu-nav a').forEach((link) =>
         link.addEventListener('click', (e) => {
             e.preventDefault();
-            handleCategory(link.textContent.trim(), true);
+            if (link.classList.contains('scrap-menu-link')) {
+                toggleMenu(false);
+                renderScrap();
+            } else {
+                handleCategory(link.textContent.trim(), true);
+            }
         })
     );
 };

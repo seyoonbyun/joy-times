@@ -26,6 +26,20 @@
         height: 180px;
     }
 
+    .news-card-content{
+        padding-right: 0;
+    }
+
+    /* 스크랩 버튼: 이미지 우측 상단에 배치 */
+    .scrap-btn{
+        top: 16px;
+        right: 6px;
+        font-size: 1.6rem;
+        padding: 8px 10px;
+        background: rgba(255,255,255,.85);
+        border-radius: 50%;
+    }
+
     /* 검색 input 유동 너비 */
     .search-box{
         padding: 10px 8px;
@@ -119,6 +133,49 @@
     border-bottom: 1px solid #ddd;
     padding: 12px 0;
     gap: 15px;
+    position: relative;
+}
+
+.news-card-img,
+.news-card-content{
+    cursor: pointer;
+}
+
+/* ── 스크랩 버튼 ── */
+.scrap-btn{
+    position: absolute;
+    top: 14px;
+    right: 0;
+    background: rgba(255,255,255,.75);
+    border: none;
+    font-size: 1.4rem;
+    line-height: 1;
+    cursor: pointer;
+    padding: 4px 6px;
+    border-radius: 4px;
+    color: #ccc;
+    transition: color .2s, transform .2s;
+}
+
+.scrap-btn:hover{
+    transform: scale(1.2);
+    color: #e74c3c;
+}
+
+.scrap-btn.scraped{
+    color: #e74c3c;
+}
+
+/* ── 사이드 메뉴 구분선 ── */
+.side-menu-divider{
+    border: none;
+    border-top: 1px solid #ddd;
+    margin: 10px 0;
+}
+
+.scrap-menu-link{
+    color: #e74c3c !important;
+    font-weight: 600;
 }
 
 .news-card-img {
@@ -137,6 +194,7 @@
 .news-card-content {
     flex: 1;
     min-width: 0;
+    padding-right: 36px;
 }
 
 .news-card-content h2,
