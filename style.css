@@ -13,65 +13,6 @@
         width: 280px;
         margin: 0 10px;
     }
-
-    /* 뉴스 카드: 세로 배치 */
-    .news-card{
-        flex-direction: column;
-        gap: 10px;
-    }
-
-    .news-card-img{
-        flex: none;
-        width: 100%;
-        height: 180px;
-    }
-
-    .news-card-content{
-        padding-right: 0;
-    }
-
-    /* 스크랩 버튼: 이미지 우측 상단에 배치 */
-    .scrap-btn{
-        top: 16px;
-        right: 6px;
-        font-size: 1.6rem;
-        padding: 8px 10px;
-        background: rgba(255,255,255,.85);
-        border-radius: 50%;
-    }
-
-    /* 검색 input 유동 너비 */
-    .search-box{
-        padding: 10px 8px;
-    }
-
-    .search-box input{
-        width: 100%;
-        min-width: 0;
-        flex: 1;
-    }
-
-    /* 페이지네이션: Previous/Next 텍스트 숨기고 아이콘만 */
-    .pagination{
-        flex-wrap: wrap;
-        gap: 4px;
-    }
-
-    .pagination .page-link{
-        padding: 6px 10px;
-        font-size: 0.85rem;
-    }
-
-    .pagination .prev-text,
-    .pagination .next-text{
-        display: none;
-    }
-
-    /* 컨테이너 좌우 여백 */
-    .container{
-        padding-left: 12px;
-        padding-right: 12px;
-    }
 }
 .menus{
     display: flex;
@@ -365,4 +306,66 @@
 
 .pagination .page-link:focus{
     box-shadow: 0 0 0 .2rem rgba(51,51,51,.25);
+}
+
+/* ── 모바일 반응형 ── */
+@media (max-width: 576px){
+    /* 뉴스 카드: 세로 배치 (이미지 위, 텍스트 아래) */
+    .news-card{
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .news-card-img{
+        flex: none;
+        width: 100%;
+        height: 180px;
+    }
+
+    .news-card-content{
+        padding-right: 0;
+    }
+
+    /* 스크랩 버튼: 이미지 우측 상단에 배치 */
+    .scrap-btn{
+        top: 16px;
+        right: 6px;
+        font-size: 1.6rem;
+        padding: 8px 10px;
+        background: rgba(255,255,255,.85);
+        border-radius: 50%;
+    }
+
+    /* 검색 input 유동 너비 */
+    .search-box{
+        padding: 10px 8px;
+    }
+
+    .search-box input{
+        width: 100%;
+        min-width: 0;
+        flex: 1;
+    }
+
+    /* 페이지네이션 */
+    .pagination{
+        flex-wrap: wrap;
+        gap: 4px;
+    }
+
+    .pagination .page-link{
+        padding: 6px 10px;
+        font-size: 0.85rem;
+    }
+
+    .pagination .prev-text,
+    .pagination .next-text{
+        display: none;
+    }
+
+    /* 컨테이너 좌우 여백 */
+    .container{
+        padding-left: 12px;
+        padding-right: 12px;
+    }
 }
