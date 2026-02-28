@@ -323,10 +323,10 @@
     }
 
     .news-card-content{
-        padding-right: 0;
+        padding-right: 36px;
     }
 
-    /* 스크랩 버튼: 우측 하단에 배치, 빈 하트(레드 테두리) */
+    /* 스크랩 버튼: 우측 하단, 테두리 없음 */
     .scrap-btn{
         top: auto;
         bottom: 14px;
@@ -334,8 +334,8 @@
         font-size: 1.5rem;
         padding: 6px 8px;
         background: transparent;
-        border: 2px solid #e74c3c;
-        border-radius: 50%;
+        border: none;
+        border-radius: 0;
         color: #e74c3c;
     }
 
@@ -344,8 +344,8 @@
     }
 
     .scrap-btn.scraped{
-        background: #e74c3c;
-        color: #fff;
+        background: transparent;
+        color: #e74c3c;
     }
 
     /* 검색 input 유동 너비 */
