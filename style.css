@@ -13,6 +13,51 @@
         width: 280px;
         margin: 0 10px;
     }
+
+    /* 뉴스 카드: 세로 배치 */
+    .news-card{
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .news-card-img{
+        flex: none;
+        width: 100%;
+        height: 180px;
+    }
+
+    /* 검색 input 유동 너비 */
+    .search-box{
+        padding: 10px 8px;
+    }
+
+    .search-box input{
+        width: 100%;
+        min-width: 0;
+        flex: 1;
+    }
+
+    /* 페이지네이션: Previous/Next 텍스트 숨기고 아이콘만 */
+    .pagination{
+        flex-wrap: wrap;
+        gap: 4px;
+    }
+
+    .pagination .page-link{
+        padding: 6px 10px;
+        font-size: 0.85rem;
+    }
+
+    .pagination .prev-text,
+    .pagination .next-text{
+        display: none;
+    }
+
+    /* 컨테이너 좌우 여백 */
+    .container{
+        padding-left: 12px;
+        padding-right: 12px;
+    }
 }
 .menus{
     display: flex;
@@ -236,4 +281,30 @@
     color: #c00;
     padding: 3rem 1rem;
     font-size: 1.1rem;
+}
+
+/* ── 페이지네이션 ── */
+.pagination{
+    margin: 20px 0 40px;
+}
+
+.pagination .page-link{
+    color: #333;
+    border-color: #ddd;
+}
+
+.pagination .page-item.active .page-link{
+    background-color: #333;
+    border-color: #333;
+    color: #fff;
+    font-weight: 700;
+}
+
+.pagination .page-link:hover{
+    background-color: #eee;
+    color: #000;
+}
+
+.pagination .page-link:focus{
+    box-shadow: 0 0 0 .2rem rgba(51,51,51,.25);
 }

@@ -4,6 +4,11 @@ const FALLBACK_IMG = 'https://placehold.co/400x300?text=No+Image';
 const ERROR_IMG = 'https://placehold.co/400x300?text=Image+Not+Available';
 
 let newsList = [];
+let totalPages = 50;
+let totalResults = 0;
+let page = 1;
+const groupSize = 10;
+const pageGroup = 5;
 
 // ── DOM 참조 ──
 const $ = (sel) => document.querySelector(sel);
@@ -38,6 +43,8 @@ if (menuBtn && sideMenu && menuOverlay) {
 // ── 뉴스 Fetch (공통) ──
 const fetchNews = async (params = {}) => {
     const url = new URL(BASE_NEWS_URL);
+    params.page = page;
+    params.pageSize = groupSize;
     Object.entries(params).forEach(([k, v]) => {
         if (v) url.searchParams.set(k, v);
     });
@@ -51,19 +58,28 @@ const fetchNews = async (params = {}) => {
         }
 
         newsList = data.articles;
+        totalResults = data.totalResults || 0;
+        totalPages = Math.ceil(totalResults / groupSize);
+        if (totalPages < 1) totalPages = 1;
 
         if (!newsList || newsList.length === 0) {
             throw new Error('검색된 결과가 없습니다. 다른 키워드로 검색해 보세요.');
         }
 
         render();
+        paginationRender();
     } catch (err) {
         renderError(err.message);
     }
 };
 
-const getLatestNews = (category) =>
-    fetchNews(category ? { category: category.toLowerCase().trim() } : {});
+let currentParams = {};
+
+const getLatestNews = (category) => {
+    page = 1;
+    currentParams = category ? { category: category.toLowerCase().trim() } : {};
+    fetchNews({ ...currentParams });
+};
 
 const getNewsByKeyword = () => {
     const keyword = searchInput?.value?.trim();
@@ -71,7 +87,9 @@ const getNewsByKeyword = () => {
         renderError('검색어를 입력해 주세요.');
         return;
     }
-    fetchNews({ q: keyword });
+    page = 1;
+    currentParams = { q: keyword };
+    fetchNews({ ...currentParams });
 };
 
 // ── HTML 이스케이프 ──
@@ -102,6 +120,71 @@ const render = () => {
                 </div>
             </article>`)
         .join('');
+};
+
+// ── 페이지네이션 렌더링 ──
+const paginationRender = () => {
+    const paginationUl = $('.pagination');
+    if (!paginationUl) return;
+
+    // 현재 페이지 그룹의 첫 페이지와 마지막 페이지 계산
+    const firstPage = Math.floor((page - 1) / pageGroup) * pageGroup + 1;
+    let lastPage = firstPage + pageGroup - 1;
+    if (lastPage > totalPages) lastPage = totalPages;
+
+    let html = '';
+
+    // First 버튼 (1페이지면 숨김)
+    if (page > 1) {
+        html += `<li class="page-item">
+            <a class="page-link" href="#" onclick="moveToPage(1); return false;" aria-label="First">
+                <span aria-hidden="true">&laquo;&laquo;</span>
+            </a>
+        </li>`;
+    }
+
+    // Previous 버튼 (1페이지면 숨김)
+    if (page > 1) {
+        html += `<li class="page-item">
+            <a class="page-link" href="#" onclick="moveToPage(${page - 1}); return false;" aria-label="Previous">
+                <span aria-hidden="true">&laquo;</span> <span class="prev-text">Previous</span>
+            </a>
+        </li>`;
+    }
+
+    // 페이지 번호
+    for (let i = firstPage; i <= lastPage; i++) {
+        html += `<li class="page-item${i === page ? ' active' : ''}">
+            <a class="page-link" href="#" onclick="moveToPage(${i}); return false;">${i}</a>
+        </li>`;
+    }
+
+    // Next 버튼 (마지막 페이지면 숨김)
+    if (page < totalPages) {
+        html += `<li class="page-item">
+            <a class="page-link" href="#" onclick="moveToPage(${page + 1}); return false;" aria-label="Next">
+                <span class="next-text">Next</span> <span aria-hidden="true">&raquo;</span>
+            </a>
+        </li>`;
+    }
+
+    // Last 버튼 (마지막 페이지면 숨김)
+    if (page < totalPages) {
+        html += `<li class="page-item">
+            <a class="page-link" href="#" onclick="moveToPage(${totalPages}); return false;" aria-label="Last">
+                <span aria-hidden="true">&raquo;&raquo;</span>
+            </a>
+        </li>`;
+    }
+
+    paginationUl.innerHTML = html;
+};
+
+// ── 페이지 이동 ──
+const moveToPage = (pageNum) => {
+    page = pageNum;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    fetchNews({ ...currentParams });
 };
 
 // ── 메뉴 Active 상태 ──
